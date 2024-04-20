@@ -29,7 +29,9 @@ public class SecurityConfig {
                 .roles("CARD-OWNER").build();
         UserDetails hankOwnsNoCards = users.username("hanks_no_card").password(passwordEncoder.encode("qrs456"))
                 .roles("NON-OWNER").build();
-        return new InMemoryUserDetailsManager(sarah, hankOwnsNoCards);
+        UserDetails kumar = users.username("kumar2").password(passwordEncoder.encode("xyz789"))
+                .roles("CARD-OWNER").build();
+        return new InMemoryUserDetailsManager(sarah, hankOwnsNoCards, kumar);
     }
 
     @Bean
