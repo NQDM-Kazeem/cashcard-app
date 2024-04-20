@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,11 +29,15 @@ public class CashCardController {
         this.cashCardRepository = cashCardRepository;
     }
 
+    private CashCard findCashCard(Long requestId, Principal principal) {
+        return cashCardRepository.findByIdAndOwner(requestId, principal.getName());
+    }
+
     @GetMapping("/{requestId}")
     private ResponseEntity<CashCard> findById(@PathVariable Long requestId, Principal principal) {
-        Optional<CashCard> cashCardOptional = Optional.ofNullable(cashCardRepository.findByIdAndOwner(requestId, principal.getName()));
-        if(cashCardOptional.isPresent()) {
-            return ResponseEntity.ok(cashCardOptional.get());
+        CashCard cashCard = findCashCard(requestId, principal);
+        if(cashCard != null) {
+            return ResponseEntity.ok(cashCard);
         }
         return ResponseEntity.notFound().build();
     }
@@ -54,5 +59,16 @@ public class CashCardController {
         CashCard savedCashCard = cashCardRepository.save(cashCardWithOwner);
         URI locationOfNewCashCard = ucb.path("cashcards/{id}").buildAndExpand(savedCashCard.id()).toUri();
         return ResponseEntity.created(locationOfNewCashCard).build();
+    }
+
+    @PutMapping("/{requestId}")
+    private ResponseEntity<Void> updateCashCard(@PathVariable Long requestId, @RequestBody CashCard cashCardUpdate, Principal principal) {
+        CashCard cashcard = findCashCard(requestId, principal);
+        if (cashcard != null) {
+        CashCard updatedCashCard = new CashCard(cashcard.id(), cashCardUpdate.amount(), principal.getName());
+        cashCardRepository.save(updatedCashCard);
+        return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
